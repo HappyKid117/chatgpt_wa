@@ -5,6 +5,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 import time
 import warnings
+import re
 warnings.filterwarnings("ignore")
 
 latest_message_class_name = '_21Ahp'
@@ -14,7 +15,30 @@ current_chat_class_name = '_3W2ap'
 search_box_xpath = '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p'
 chatgpt_response_xpath = "//*[contains(@class, 'markdown prose w-full break-words dark:prose-invert light')]"
 
-prompt = "Give a short brief response and reply like a gen z for the following query. Feel free to use acronyms : "
+prompt = " "
+
+def remove_emojis(data):
+    emoj = re.compile("["
+        u"\U0001F600-\U0001F64F"  # emoticons
+        u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+        u"\U0001F680-\U0001F6FF"  # transport & map symbols
+        u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        u"\U00002500-\U00002BEF"  # chinese char
+        u"\U00002702-\U000027B0"
+        u"\U00002702-\U000027B0"
+        u"\U000024C2-\U0001F251"
+        u"\U0001f926-\U0001f937"
+        u"\U00010000-\U0010ffff"
+        u"\u2640-\u2642" 
+        u"\u2600-\u2B55"
+        u"\u200d"
+        u"\u23cf"
+        u"\u23e9"
+        u"\u231a"
+        u"\ufe0f"  # dingbats
+        u"\u3030"
+                      "]+", re.UNICODE)
+    return re.sub(emoj, '', data)
 
 def newline():
     ActionChains(driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
@@ -37,36 +61,40 @@ def get_latest_message():
     return latest_message
 
 def send_message(string):
-    input_box = driver.find_element(By.CLASS_NAME, inp_class_name)  
-    input_box.send_keys("_*Soupy:*_ "+string + Keys.ENTER)
+    driver.switch_to.window(driver.window_handles[1])
+    input_box = driver.find_element(By.CLASS_NAME, inp_class_name)
+    messages = convert(string)
+    input_box.send_keys("_*Soupy:*_ ")
+    newline()
+    for i in messages:
+        input_box.send_keys(i)
+        newline()
+    input_box.send_keys(Keys.ENTER)
     print(">Message sent")
 
 def send_intro():
     input_box = driver.find_element(By.CLASS_NAME, inp_class_name)
     input_box.send_keys('_*Soupy:*_')
     newline()
-    input_box.send_keys('soupy <Your query>')
+    input_box.send_keys('Hi, If you want me to ignore just include my name in your message.')
     input_box.send_keys(Keys.ENTER)
 
 def convert(lst):
-    return (lst.split())
+    return (lst.splitlines())
 
 def read_chatgpt_response(x):
     response = driver.find_elements(By.XPATH, chatgpt_response_xpath)
     response = response[len(response)-1].get_attribute("innerText")
+    print(">Response : " + response)
     return response
 
 def get_chatgpt_response(x):
     driver.switch_to.window(driver.window_handles[0])
     chatgpt_input_box = driver.find_element("xpath", (chatgpt_input_box_xpath))
     chatgpt_input_box.send_keys(prompt+x+Keys.ENTER)
-    time.sleep(3)
+    time.sleep(10)
     response = read_chatgpt_response(x);
-    driver.switch_to.window(driver.window_handles[1])
-    input_box = driver.find_element(By.CLASS_NAME, inp_class_name)
-    input_box.send_keys(response)
-    time.sleep(1)
-    input_box.send_keys(Keys.ENTER)
+    send_message(remove_emojis(response))
 
 def functionality(x):
     print(">Latest message = "+x)
@@ -79,17 +107,24 @@ def functionality(x):
             send_intro()
         else:
             send_message("You can't ask me to go to "+chat_name+" from "+current_chat)
-
-    elif(x.startswith("soupy ")):
-        x = x.replace('soupy ', '')
-        if(True):
-            print(x)
-            get_chatgpt_response(x)
+        return
 
     elif(x == "go home soupy"):
         send_message("bye")
         go_to_chat(home_chat)
         send_intro()
+        return
+    
+    elif("soupy" in x):
+        return
+    
+    else:
+        print(x)
+        get_chatgpt_response(x)
+
+    # x = x.replace('soupy ', '')
+    # if(True):
+
 
 def initialize():
     chrome_options = Options()
