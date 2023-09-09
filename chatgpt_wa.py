@@ -3,19 +3,18 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 import time
 import warnings
 warnings.filterwarnings("ignore")
 
 latest_message_class_name = '_21Ahp'
 inp_class_name = '_3Uu1_'
-search_class_name = '_1biMM _3sHED' # not working
 chatgpt_input_box_xpath = '//*[@id="prompt-textarea"]'
 current_chat_class_name = '_3W2ap'
+search_box_xpath = '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p'
+chatgpt_response_xpath = "//*[contains(@class, 'markdown prose w-full break-words dark:prose-invert light')]"
 
-prompt = "Give a short brief response for the following query: "
+prompt = "Give a short brief response and reply like a gen z for the following query. Feel free to use acronyms : "
 
 def newline():
     ActionChains(driver).key_down(Keys.SHIFT).key_down(Keys.ENTER).key_up(Keys.SHIFT).key_up(Keys.ENTER).perform()
@@ -28,8 +27,7 @@ def get_current_chat():
     return current_chat_name
 
 def go_to_chat(chat_name):
-    search_xpath = '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p'
-    search_box = driver.find_element("xpath", (search_xpath))
+    search_box = driver.find_element("xpath", (search_box_xpath))
     print(">Going to chat "+chat_name)
     search_box.send_keys(chat_name+Keys.ENTER)
 
@@ -54,8 +52,7 @@ def convert(lst):
     return (lst.split())
 
 def read_chatgpt_response(x):
-    text_xpath = "//*[contains(@class, 'markdown prose w-full break-words dark:prose-invert light')]"
-    response = driver.find_elements(By.XPATH, text_xpath)
+    response = driver.find_elements(By.XPATH, chatgpt_response_xpath)
     response = response[len(response)-1].get_attribute("innerText")
     return response
 
@@ -104,7 +101,7 @@ def initialize():
 
 print(">Starting Bot...")
 home_chat = 'bot home chat' # set your private chat
-print("Home chat = "+home_chat)
+print("Home chat = " + home_chat)
 print(">Initializing driver...")
 driver = initialize()
 go_to_chat(home_chat)
