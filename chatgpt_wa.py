@@ -15,7 +15,7 @@ current_chat_class_name = '_3W2ap'
 search_box_xpath = '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]/p'
 chatgpt_response_xpath = "//*[contains(@class, 'markdown prose w-full break-words dark:prose-invert light')]"
 
-prompt = " "
+prompt = "Reply with greater burstiness and perplexity but keep it short."
 
 def remove_emojis(data):
     emoj = re.compile("["
@@ -64,7 +64,7 @@ def send_message(string):
     driver.switch_to.window(driver.window_handles[1])
     input_box = driver.find_element(By.CLASS_NAME, inp_class_name)
     messages = convert(string)
-    input_box.send_keys("_*Soupy:*_ ")
+    input_box.send_keys("_*.Soupy:*_ ")
     newline()
     for i in messages:
         input_box.send_keys(i)
@@ -74,9 +74,9 @@ def send_message(string):
 
 def send_intro():
     input_box = driver.find_element(By.CLASS_NAME, inp_class_name)
-    input_box.send_keys('_*Soupy:*_')
+    input_box.send_keys('_*.Soupy:*_')
     newline()
-    input_box.send_keys('Hi, If you want me to ignore just include my name in your message.')
+    input_box.send_keys('Hi, If you want me to ignore your message, put "." at the beginning')
     input_box.send_keys(Keys.ENTER)
 
 def convert(lst):
@@ -91,8 +91,8 @@ def read_chatgpt_response(x):
 def get_chatgpt_response(x):
     driver.switch_to.window(driver.window_handles[0])
     chatgpt_input_box = driver.find_element("xpath", (chatgpt_input_box_xpath))
-    chatgpt_input_box.send_keys(prompt+x+Keys.ENTER)
-    time.sleep(10)
+    chatgpt_input_box.send_keys(x+" "+prompt+Keys.ENTER)
+    time.sleep(5)
     response = read_chatgpt_response(x);
     send_message(remove_emojis(response))
 
@@ -115,16 +115,12 @@ def functionality(x):
         send_intro()
         return
     
-    elif("soupy" in x):
+    elif(x.startswith(".")): #("soupy" in x):
         return
     
     else:
         print(x)
         get_chatgpt_response(x)
-
-    # x = x.replace('soupy ', '')
-    # if(True):
-
 
 def initialize():
     chrome_options = Options()
